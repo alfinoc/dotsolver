@@ -1,0 +1,42 @@
+html, body {
+	margin: 0px;
+	padding: 0px;
+	background-color: #EEEEEE;
+}
+
+#boardwrap {
+	overflow: hidden;
+	background-color: white;
+	border: 1px solid lightgray;
+	border-radius: 10px;
+	display: block;
+	margin: auto;
+	margin-top: 10%;
+	width: 500px;
+	height: 500px;
+}
+
+svg {
+	width: 100%;
+	height: 100%;
+}
+
+circle {
+	cursor: pointer;
+}
+
+circle:hover {
+	fill: black !important;
+}
+
+circle[code="1"] {fill: red;}
+circle[code="2"]  {fill: blue;}
+circle[code="3"]  {fill: orange;}
+circle[code="4"]  {fill: yellow;}
+circle[code="5"]  {fill: green;}
+circle[code="6"]  {fill: purple;}
+
+line {
+	stroke: black;
+	stroke-width: 5px;
+}
