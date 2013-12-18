@@ -7,14 +7,11 @@ DIM = 6
 var colors = ["transparent", "blue", "orange", "red",
 						"purple", "green", "yellow"];
 
-
 function assignColorTags() {
 	var circles = $("circle");
 	for (var i = 0; i < circles.length; i++) {
 		var colorCode = randInt(1, 7);
-		//$(circles[i]).attr("fill", colors[colorCode]);
 		$(circles[i]).attr("code", colorCode);
-		$(circles[i]).addClass("1");
 	}
 }
 
@@ -24,27 +21,13 @@ function randInt(min, max) {
 }
 
 function attachConnectorHandlers() {
-	var svg = $("svg");
-	var xOffset = svg.position().left;
-	var yOffset = svg.position().top;
 	$("circle").mousedown(function(event) {
-		var radius = parseFloat($(event.target).attr("r")) / 100 * svg.width();
-		var startX = $(event.target).position().left - xOffset + radius;
-		var startY = $(event.target).position().top - yOffset + radius;
-		var line = makeLine(startX, startY, startX, startY);
-
-		svg.prepend(line);
+		makeFollowerLine(event.target);
+		pushLine(parseInt($(this).attr("id")));
 		bindAdjacentDotListeners(parseInt($(this).attr("id")), true)
-		$("#boardwrap").mousemove(function(event) {
-			line.setAttribute("x2", event.pageX - xOffset);
-			line.setAttribute("y2", event.pageY - yOffset);
-		});
-		$("body").mouseup(function() {
-			$("#boardwrap").unbind();
-			$("line").remove();
-		})
 	});
-	$("circle").mouseup(function() {
+	$("body").mouseup(function() {
+		$("#boardwrap").unbind();
 		unbindMouseoverListeners();
 		clearLines();
 	});
@@ -52,7 +35,6 @@ function attachConnectorHandlers() {
 
 function bindAdjacentDotListeners(id, first) {
 	unbindMouseoverListeners();
-	pushLine(id);
 	var target = $("#" + id);
 	var code = target.attr("code");
 	for (var i = 1; i < 9; i += 2) {
@@ -72,8 +54,23 @@ function bindAdjacentDotListeners(id, first) {
 
 function mouseoverCallback(adj, adjId) {
 	return function() {
+		pushLine(adjId);
 		bindAdjacentDotListeners(adjId, false);
 	}
+}
+
+function makeFollowerLine(fromElem) {
+	var svg = $("svg");
+	var xOffset = svg.position().left;
+	var yOffset = svg.position().top;
+	var coord = getCenter($(fromElem));
+	var line = makeLine(coord[0], coord[1], coord[0], coord[1]);
+
+	svg.prepend(line);
+	$("#boardwrap").mousemove(function(event) {
+		line.setAttribute("x2", event.pageX - xOffset);
+		line.setAttribute("y2", event.pageY - yOffset);
+	});
 }
 
 function makeLine(x1, y1, x2, y2) {
@@ -85,37 +82,58 @@ function makeLine(x1, y1, x2, y2) {
 	return line;
 }
 
-var linestack = [];
+var idChain = [];
+var lineChain = [];
 function pushLine(id) {
-	if (!containsPair(id, linestack[linestack.length - 1])) {
-		linestack.push(id);
-		console.log("pushed! linestack: " + linestack);
+	var prev = idChain[idChain.length - 1];
+	if (!containsPair(id, prev)) {
+		idChain.push(id);
+		lineChain.push(connect(id, prev));
+		console.log("pushed! idChain: " + idChain);
 	}
 }
+
 function popLine(id) {
-	linestack.pop(id);
-	bindAdjacentDotListeners(linestack[linestack.length - 1]);
-	console.log("popped! linestack: " + linestack);
+	if (idChain.length > 1) {
+		idChain.pop(id);
+		bindAdjacentDotListeners(idChain[idChain.length - 1]);
+		console.log("popped! idChain: " + idChain);
+	}
 }
+
 function clearLines(id) {
-	linestack = []
+	idChain = [];
+	$("line").remove();
 }
+
 function containsPair(first, second) {
-	for (var i = 1; i < linestack.length; i++)
-		if ((linestack[i] == second && linestack[i - 1] == first) ||
-			(linestack[i] == first && linestack[i - 1] == second))
+	for (var i = 1; i < idChain.length; i++)
+		if ((idChain[i] == second && idChain[i - 1] == first) ||
+			(idChain[i] == first && idChain[i - 1] == second))
 			return true;
 	return false;
+}
+
+function connect(idStart, idEnd) {
+	if (idStart == undefined || idEnd == undefined) return;
+	var start = getCenter($("#" + idStart));
+	var end = getCenter($("#" + idEnd));
+	var line = makeLine(start[0], start[1], end[0], end[1])
+	$("svg").prepend(line);
+	return $(line);
+}
+
+function getCenter(elem) {
+	var svg = $("svg");
+	var xOffset = svg.position().left;
+	var yOffset = svg.position().top;
+	var radius = parseFloat(elem.attr("r")) / 100 * svg.width();
+	var cx = elem.position().left - xOffset + radius;
+	var cy = elem.position().top - yOffset + radius;
+	return [cx, cy];
 }
 
 function unbindMouseoverListeners() {
 	$("circle").unbind("mouseenter");
 	$("circle").unbind("mouseleave");
 }
-
-
-
-
-
-
-
