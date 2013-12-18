@@ -22,7 +22,7 @@ function randInt(min, max) {
 
 function attachConnectorHandlers() {
 	$("circle").mousedown(function(event) {
-		lineManager.makeFollowerLine(event.target);
+		lineManager.setFollowerLine(event.target);
 		lineManager.pushLine(parseInt($(this).attr("id")));
 		bindAdjacentDotListeners(parseInt($(this).attr("id")), true)
 	});
@@ -36,27 +36,53 @@ function attachConnectorHandlers() {
 function bindAdjacentDotListeners(id, first) {
 	unbindMouseoverListeners();
 	var target = $("#" + id);
+	lineManager.setFollowerLine(target);
 	var code = target.attr("code");
 	for (var i = 1; i < 9; i += 2) {
 		var adjId = id - 1 - DIM + DIM * Math.floor(i / 3) + i % 3;
 		var adj = $("#" + adjId);
 		if (adj.attr("code") == code && !lineManager.containsPair(id, adjId))
-			adj.mouseenter(mouseoverCallback(adj, adjId));
+			adj.mouseenter(progressChainCallback(adj, adjId));
 	}
 	// change this to: if mouseout in the direction of the connected piece, popLine
+
 	target.mouseenter(function() {
 		target.mouseleave(function() {
-			lineManager.popLine(adjId);
+			lineManager.popLine();
 		});
 	});
+
+	//target.mouseleave(retractChainCallback(target));
 }
 
-function mouseoverCallback(adj, adjId) {
+function progressChainCallback(adj, adjId) {
 	return function() {
 		lineManager.pushLine(adjId);
 		bindAdjacentDotListeners(adjId, false);
 	}
 }
+
+// to do: this is hard...
+function retractChainCallback(target) {
+	var svg = $("svg");
+	var xOffset = svg.position().left;
+	var yOffset = svg.position().top;
+	var center = lineManager.getCenter(target);
+	var prev = lineManager.idChain[lineManager.idChain - 2];
+
+
+	return function(event) {
+		var x = event.pageX - xOffset;
+		var y = event.pageY - yOffset;
+		// approximates a region of the dot that is closest to the previous
+		// dot in the chain
+		console.log(x < center[0]);
+		console.log(Math.abs(y - center[1]) < 50);
+		if (x < center[0] && Math.abs(y - center[1]) < 50)
+			lineManager.popLine();
+	}
+}
+
 
 function unbindMouseoverListeners() {
 	$("circle").unbind("mouseenter");
@@ -66,6 +92,7 @@ function unbindMouseoverListeners() {
 var lineManager = {
 	idChain: [],
 	lineChain: [],
+	follower: null,
 	pushLine: function(id) {
 		var prev = this.idChain[this.idChain.length - 1];
 		if (!this.containsPair(id, prev)) {
@@ -74,15 +101,17 @@ var lineManager = {
 		}
 	},
 
-	popLine: function(id) {
+	popLine: function() {
 		if (this.idChain.length > 1) {
-			this.idChain.pop(id);
+			this.idChain.pop();
 			$(this.lineChain.pop()).remove();
 			bindAdjacentDotListeners(this.idChain[this.idChain.length - 1]);
 		}
 	},
 
-	makeFollowerLine: function(fromElem) {
+	setFollowerLine: function(fromElem) {
+		if (this.follower != null)
+			$(this.follower).remove();
 		var svg = $("svg");
 		var xOffset = svg.position().left;
 		var yOffset = svg.position().top;
@@ -94,6 +123,7 @@ var lineManager = {
 			line.setAttribute("x2", event.pageX - xOffset);
 			line.setAttribute("y2", event.pageY - yOffset);
 		});
+		this.follower = line;
 	},
 
 	connect: function(idStart, idEnd) {
