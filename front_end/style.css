@@ -2,18 +2,48 @@ html, body {
 	margin: 0px;
 	padding: 0px;
 	background-color: #EEEEEE;
+	font-family: "Avenir Next";
+	text-align: center;
 }
 
-#boardwrap {
+body > div {
+	display: inline-block;
+	margin-left: 20px;
+	margin-right: 20px;
 	overflow: hidden;
 	background-color: white;
 	border: 1px solid lightgray;
 	border-radius: 10px;
-	display: block;
-	margin: auto;
+}
+
+#boardwrap {
 	margin-top: 10%;
 	width: 500px;
 	height: 500px;
+}
+
+#moveinfo {
+	width: 300px;
+	height: 400px;
+	margin-bottom: 50px;
+}
+
+#scoreboard {
+	width: 150px;
+	height: 120px;
+	margin-top: 190px;
+	margin-bottom: 190px;
+	padding-top: 10px;
+	text-align: center;
+	font-style: italic;
+	color: gray;
+}
+
+#scoreboard > div {
+	font-style: normal;
+	font-size: 50pt;
+	width: 100%;
+	color: black;
 }
 
 svg {
@@ -29,12 +59,13 @@ circle:hover {
 	fill: black !important;
 }
 
-circle[code="1"] {fill: red;}
-circle[code="2"]  {fill: blue;}
-circle[code="3"]  {fill: orange;}
-circle[code="4"]  {fill: yellow;}
-circle[code="5"]  {fill: green;}
-circle[code="6"]  {fill: purple;}
+circle[code="0"] {fill: lightgray;}
+circle[code="1"] {fill: #1179AB;}
+circle[code="2"] {fill: #C92236;}
+circle[code="3"] {fill: #5D805A;}
+circle[code="4"] {fill: #FDD463;}
+circle[code="5"] {fill: #39106C;}
+circle[code="6"] {fill: #F48B0B;}
 
 line {
 	stroke: black;
